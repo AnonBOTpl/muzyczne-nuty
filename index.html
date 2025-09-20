@@ -327,10 +327,11 @@ async function loadMusicCatalog() {
             }
         }
 
-        function showMainContent() {
-            document.getElementById('accessGate').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-            loadMusicItems();
+function showMainContent() {
+    document.getElementById('accessGate').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    loadMusicCatalog(); // <-- zamiast loadMusicItems()
+}
         }
 
         function loadMusicItems() {

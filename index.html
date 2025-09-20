@@ -283,26 +283,25 @@
         
         // GitHub Raw URL do plików (zastąp własnymi danymi)
         const GITHUB_CONFIG = {
-            username: 'AnonBOTpl',        // ZMIEŃ NA SWOJĄ NAZWĘ UŻYTKOWNIKA GITHUB
-            repository: 'muzyczne-nuty',      // ZMIEŃ NA NAZWĘ SWOJEGO REPO
-            branch: 'main'                    // lub 'master' w zależności od repo
+            username: 'AnonBOTpl',
+            repository: 'muzyczne-nuty',
+            branch: 'main'
         };
 
-let MUSIC_CATALOG = [];
+        let MUSIC_CATALOG = [];
 
-// Ładowanie katalogu z pliku JSON
-async function loadMusicCatalog() {
-    try {
-        const response = await fetch("music.json");
-        MUSIC_CATALOG = await response.json();
-        loadMusicItems();
-    } catch (error) {
-        console.error("Błąd wczytywania music.json:", error);
-        document.getElementById('musicGrid').innerHTML =
-            '<div style="text-align: center; padding: 60px; color: #e74c3c;">Nie udało się wczytać katalogu utworów.</div>';
-    }
-}
-
+        // Ładowanie katalogu z pliku JSON
+        async function loadMusicCatalog() {
+            try {
+                const response = await fetch("music.json");
+                MUSIC_CATALOG = await response.json();
+                loadMusicItems();
+            } catch (error) {
+                console.error("Błąd wczytywania music.json:", error);
+                document.getElementById('musicGrid').innerHTML =
+                    '<div style="text-align: center; padding: 60px; color: #e74c3c;">Nie udało się wczytać katalogu utworów.</div>';
+            }
+        }
 
         let isAuthenticated = sessionStorage.getItem('musicAccess') === 'true';
 
@@ -327,11 +326,10 @@ async function loadMusicCatalog() {
             }
         }
 
-function showMainContent() {
-    document.getElementById('accessGate').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
-    loadMusicCatalog(); // <-- zamiast loadMusicItems()
-}
+        function showMainContent() {
+            document.getElementById('accessGate').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            loadMusicCatalog(); // teraz wczytuje JSON
         }
 
         function loadMusicItems() {
@@ -349,12 +347,10 @@ function showMainContent() {
                 itemElement.dataset.title = item.title.toLowerCase();
                 itemElement.dataset.composer = item.composer.toLowerCase();
 
-                // URL do plików na GitHub
                 const baseUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repository}/${GITHUB_CONFIG.branch}/files`;
                 const sheetUrl = item.sheetFile ? `${baseUrl}/sheets/${item.sheetFile}` : null;
                 const audioUrl = item.audioFile ? `${baseUrl}/audio/${item.audioFile}` : null;
 
-                // Podgląd pliku nut
                 let sheetContent = '<div class="file-preview">🎼</div>';
                 if (sheetUrl) {
                     if (item.sheetFile.toLowerCase().includes('.jpg') || 
@@ -366,7 +362,6 @@ function showMainContent() {
                     }
                 }
 
-                // Player audio
                 let audioContent = '<p style="color: #7f8c8d; font-style: italic;">Brak pliku audio</p>';
                 if (audioUrl) {
                     audioContent = `<audio controls preload="metadata">
@@ -377,7 +372,6 @@ function showMainContent() {
                     </audio>`;
                 }
 
-                // Przycisk pobierania
                 const downloadButton = sheetUrl 
                     ? `<a href="${sheetUrl}" download="${item.title} - ${item.composer}" class="download-btn">Pobierz nuty</a>`
                     : '';
@@ -399,7 +393,6 @@ function showMainContent() {
             });
         }
 
-        // Wyszukiwanie
         document.getElementById('searchInput').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
             const items = document.querySelectorAll('.music-item');
@@ -412,7 +405,6 @@ function showMainContent() {
             });
         });
 
-        // Enter w polu hasła
         document.getElementById('accessPassword').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 checkAccess();

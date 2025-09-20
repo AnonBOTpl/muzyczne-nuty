@@ -84,7 +84,7 @@
 
         async function loadMusicCatalog() {
             try {
-                const response = await fetch("music.json");
+                const response = await fetch("music.json?v=" + Date.now());
                 MUSIC_CATALOG = await response.json();
                 loadMusicItems();
             } catch (error) {

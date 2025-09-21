@@ -31,6 +31,8 @@
         .audio-player { width: 100%; margin-bottom: 15px; }
         .audio-player audio { width: 100%; border-radius: 10px; }
         .download-btn { background: linear-gradient(45deg, #27ae60, #2ecc71); color: white; text-decoration: none; padding: 10px 20px; border-radius: 20px; display: inline-block; font-weight: bold; margin-right: 10px; }
+        .youtube-btn { display: inline-block; width: 32px; height: 32px; background: #FF0000; border-radius: 50%; text-decoration: none; color: white; font-weight: bold; font-size: 14px; line-height: 32px; text-align: center; margin-left: 10px; transition: all 0.3s ease; }
+        .youtube-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3); }
         .filter-section { background: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; margin-bottom: 30px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
         .search-input { flex: 1; min-width: 200px; padding: 12px; border: 2px solid #bdc3c7; border-radius: 8px; font-size: 16px; }
         .upload-notice { background: rgba(52,152,219,0.1); border-left: 4px solid #3498db; padding: 20px; border-radius: 10px; margin-bottom: 30px; text-align: center; }
@@ -229,6 +231,11 @@
                     ? `<a href="${sheetUrl}" download="${item.title} - ${item.composer}" class="download-btn" title="Pobierz plik">Pobierz nuty</a>`
                     : '';
 
+                // Link do wyszukiwania w YouTube
+                const youtubeSearchQuery = encodeURIComponent(`${item.composer} ${item.title}`);
+                const youtubeButton = `<a href="https://www.youtube.com/results?search_query=${youtubeSearchQuery}" 
+                    target="_blank" class="youtube-btn" title="Szukaj w YouTube">YT</a>`;
+
                 // Bezpieczne wyświetlanie danych (escape HTML)
                 const safeTitle = escapeHtml(item.title);
                 const safeComposer = escapeHtml(item.composer);
@@ -243,7 +250,10 @@
                     <div class="audio-player">${audioContent}</div>
                     ${safeDescription ? `<p style="color: #666; margin-bottom: 15px; font-style: italic;">${safeDescription}</p>` : ''}
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                        ${downloadButton}
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            ${downloadButton}
+                            ${youtubeButton}
+                        </div>
                         <small style="color: #95a5a6;">${formatDate(item.createdAt)}</small>
                     </div>
                 `;

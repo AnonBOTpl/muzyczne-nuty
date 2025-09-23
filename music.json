@@ -1,35 +1,5 @@
 [
   {
-    "id": "1758370289759",
-    "title": "kalinka",
-    "composer": "Michał",
-    "genre": "AI",
-    "description": "inne",
-    "sheetFile": null,
-    "audioFile": "fur-elise.mp3",
-    "createdAt": "1990-02-02"
-  },
-  {
-    "id": "1758370456094",
-    "title": "aha",
-    "composer": "nie aha",
-    "genre": "aha",
-    "description": "aha nie aha",
-    "sheetFile": null,
-    "audioFile": "fur-elise.mp3",
-    "createdAt": "4000-03-05"
-  },
-  {
-    "id": "1758385225901",
-    "title": "wlazl otek",
-    "composer": "anon",
-    "genre": "Klasyczna",
-    "description": null,
-    "sheetFile": null,
-    "audioFile": null,
-    "createdAt": "2025-09-20"
-  },
-  {
     "id": "1758417543707",
     "title": "for-elise",
     "composer": "Beethoven",
@@ -40,3 +10,4 @@
     "createdAt": "2025-09-21"
   }
 ]
+

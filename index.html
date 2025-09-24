@@ -93,6 +93,7 @@
 
         async function loadMusicCatalog() {
             try {
+                // Pokaż wskaźnik ładowania
                 document.getElementById('musicGrid').innerHTML = `
                     <div class="loading-indicator">
                         <div style="font-size: 2rem; margin-bottom: 10px;">♪</div>
@@ -101,18 +102,50 @@
                 `;
 
                 const response = await fetch("music.json?v=" + Date.now());
-                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+                // Sprawdź status odpowiedzi
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const data = await response.json();
-                if (!Array.isArray(data)) throw new Error('Nieprawidłowy format pliku music.json - oczekiwana tablica');
+
+                // Walidacja struktury JSON
+                if (!Array.isArray(data)) {
+                    throw new Error('Nieprawidłowy format pliku music.json - oczekiwana tablica');
+                }
 
                 MUSIC_CATALOG = data;
                 loadMusicItems();
+
             } catch (error) {
                 console.error("Błąd wczytywania music.json:", error);
+
+                let errorMessage = 'Nie udało się wczytać katalogu utworów.';
+                let errorDetails = '';
+
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage = 'Brak połączenia internetowego.';
+                    errorDetails = 'Sprawdź połączenie i odśwież stronę';
+                } else if (error.message.includes('HTTP 404')) {
+                    errorMessage = 'Plik music.json nie został znaleziony.';
+                    errorDetails = 'Sprawdź czy plik istnieje w repozytorium';
+                } else if (error.message.includes('JSON')) {
+                    errorMessage = 'Błąd w strukturze pliku music.json.';
+                    errorDetails = 'Sprawdź składnię JSON';
+                } else {
+                    errorDetails = error.message;
+                }
+
                 document.getElementById('musicGrid').innerHTML = `
                     <div class="error-indicator">
-                        <h3>Nie udało się wczytać katalogu utworów.</h3>
-                        <small>${error.message}</small>
+                        <h3>${errorMessage}</h3>
+                        <small>${errorDetails}</small>
+                        <div style="margin-top: 20px;">
+                            <button onclick="loadMusicCatalog()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                Spróbuj ponownie
+                            </button>
+                        </div>
                     </div>
                 `;
             }
@@ -147,15 +180,28 @@
             grid.innerHTML = '';
 
             if (!MUSIC_CATALOG || MUSIC_CATALOG.length === 0) {
-                grid.innerHTML = `<div style="text-align: center; padding: 60px; color: #7f8c8d;">Brak utworów</div>`;
+                grid.innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: #7f8c8d;">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">♪</div>
+                        <div>Brak utworów w kolekcji</div>
+                        <small>Dodaj utwory do pliku music.json</small>
+                    </div>
+                `;
                 return;
             }
 
-            MUSIC_CATALOG.forEach((item) => {
-                if (!item.title || !item.composer) return;
+            MUSIC_CATALOG.forEach(item => {
+                // Walidacja podstawowych pól
+                if (!item.title || !item.composer) {
+                    console.warn('Pominięto utwór z brakującymi danymi:', item);
+                    return;
+                }
 
                 const itemElement = document.createElement('div');
                 itemElement.className = 'music-item';
+                itemElement.dataset.title = item.title.toLowerCase();
+                itemElement.dataset.composer = item.composer.toLowerCase();
+                itemElement.dataset.genre = item.genre || '';
 
                 const baseUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repository}/${GITHUB_CONFIG.branch}/files`;
                 const sheetUrl = item.sheetFile ? `${baseUrl}/sheets/${item.sheetFile}` : null;
@@ -163,30 +209,62 @@
 
                 let sheetContent = '<div class="file-preview">🎼</div>';
                 if (sheetUrl) {
-                    sheetContent = `<div class="file-preview" onclick="window.open('${sheetUrl}', '_blank')">📄</div>`;
+                    const fileExt = item.sheetFile.toLowerCase();
+                    if (fileExt.includes('.jpg') || fileExt.includes('.png') || fileExt.includes('.jpeg')) {
+                        sheetContent = `<img src="${sheetUrl}" alt="Nuty - ${item.title}" class="file-image" onclick="window.open('${sheetUrl}', '_blank')" loading="lazy">`;
+                    } else {
+                        sheetContent = `<div class="file-preview" onclick="window.open('${sheetUrl}', '_blank')" title="Otwórz plik PDF">📄<br><small>PDF</small></div>`;
+                    }
                 }
 
                 let audioContent = '<p style="color: #7f8c8d; font-style: italic;">Brak pliku audio</p>';
                 if (audioUrl) {
-                    audioContent = `<audio controls preload="metadata"><source src="${audioUrl}" type="audio/mpeg"></audio>`;
+                    audioContent = `<audio controls preload="metadata">
+                        <source src="${audioUrl}" type="audio/mpeg">
+                        <source src="${audioUrl}" type="audio/wav">
+                        <source src="${audioUrl}" type="audio/ogg">
+                        Twoja przeglądarka nie obsługuje odtwarzania audio.
+                    </audio>`;
                 }
 
-                // MuseScore embed, jeśli istnieje link w JSON
-                let museScoreEmbed = '';
+                // MuseScore embed
+                let musescoreContent = '';
                 if (item.musescoreUrl) {
-                    museScoreEmbed = `
-                        <iframe width="100%" height="300"
-                            src="${item.musescoreUrl}/embed"
-                            frameborder="0" allowfullscreen>
-                        </iframe>`;
+                    let embedUrl = item.musescoreUrl;
+                    if (!embedUrl.includes('/embed')) {
+                        embedUrl = embedUrl.replace(/\/$/, '') + '/embed';
+                    }
+
+                    musescoreContent = `
+                        <div style="margin-bottom:15px;">
+                            <iframe width="100%" height="200" frameborder="0" allowfullscreen
+                                src="${embedUrl}">
+                            </iframe>
+                        </div>
+                    `;
                 }
+
+                const downloadButton = sheetUrl 
+                    ? `<a href="${sheetUrl}" download="${item.title} - ${item.composer}" class="download-btn" title="Pobierz plik">Pobierz nuty</a>`
+                    : '';
+
+                // Link do wyszukiwania w YouTube
+                const youtubeSearchQuery = encodeURIComponent(`${item.composer} ${item.title}`);
+                const youtubeButton = `<a href="https://www.youtube.com/results?search_query=${youtubeSearchQuery}" 
+                    target="_blank" class="youtube-btn" title="Szukaj w YouTube">YT</a>`;
+
+                // Bezpieczne wyświetlanie danych (escape HTML)
+                const safeTitle = escapeHtml(item.title);
+                const safeComposer = escapeHtml(item.composer);
+                const safeGenre = escapeHtml(item.genre || 'Nieokreślony');
+                const safeDescription = item.description ? escapeHtml(item.description) : '';
 
                 itemElement.innerHTML = `
-                    <div class="music-title">${escapeHtml(item.title)}</div>
-                    <div class="music-composer">${escapeHtml(item.composer)}</div>
-                    <div class="music-genre">${escapeHtml(item.genre || 'Nieokreślony')}</div>
+                    <div class="music-title">${safeTitle}</div>
+                    <div class="music-composer">${safeComposer}</div>
+                    <div class="music-genre">${safeGenre}</div>
                     ${sheetContent}
-                    ${museScoreEmbed}
+                    ${musescoreContent}
                     <div class="audio-player">${audioContent}</div>
                     ${safeDescription ? `<p style="color: #666; margin-bottom: 15px; font-style: italic;">${safeDescription}</p>` : ''}
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
@@ -202,21 +280,58 @@
             });
         }
 
+        // Pomocnicze funkcje
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                return new Date(dateString).toLocaleDateString('pl-PL');
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+        // Wyszukiwanie z debouncing
+        let searchTimeout;
         document.getElementById('searchInput').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
             const searchTerm = this.value.toLowerCase();
-            document.querySelectorAll('.music-item').forEach(item => {
-                const matches = item.textContent.toLowerCase().includes(searchTerm);
-                item.style.display = matches ? 'block' : 'none';
-            });
+
+            searchTimeout = setTimeout(() => {
+                const items = document.querySelectorAll('.music-item');
+                items.forEach(item => {
+                    const title = item.dataset.title || '';
+                    const composer = item.dataset.composer || '';
+                    const genre = item.dataset.genre || '';
+                    const matches = title.includes(searchTerm) || 
+                                  composer.includes(searchTerm) || 
+                                  genre.includes(searchTerm);
+                    item.style.display = matches ? 'block' : 'none';
+                });
+            }, 300);
         });
 
-        if (sessionStorage.getItem('musicAccess') === 'true') showMainContent();
+        document.getElementById('accessPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { 
+                checkAccess(); 
+            }
+        });
+
+        // Automatyczne logowanie jeśli już zalogowany
+        if (sessionStorage.getItem('musicAccess') === 'true') {
+            showMainContent();
+        }
+
+        // Obsługa błędów JavaScript
+        window.addEventListener('error', function(e) {
+            console.error('Błąd aplikacji:', e.error);
+        });
     </script>
 </body>
 </html>

@@ -335,7 +335,15 @@ musescoreContent = `
         window.addEventListener('error', function(e) {
             console.error('Błąd aplikacji:', e.error);
         });
-    </script>
+    
+// Zamknij modal po kliknięciu w tło
+document.getElementById('musescoreModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeMusescoreModal();
+  }
+});
+
+</script>
 
 <!-- Modal do MuseScore -->
 <div id="musescoreModal" class="modal hidden">
@@ -369,6 +377,8 @@ musescoreContent = `
   right: 15px; top: 10px;
   font-size: 28px;
   cursor: pointer;
+  color: #fff;
+  text-shadow: 0 0 4px #000;
 }
 </style>
 

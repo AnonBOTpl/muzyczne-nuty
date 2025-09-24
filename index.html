@@ -346,7 +346,7 @@ document.getElementById('musescoreModal').addEventListener('click', function(e) 
 </script>
 
 <!-- Modal do MuseScore -->
-<div id="musescoreModal" class="modal hidden">
+<div id="musescoreModal" class="modal hidden" onclick="if(event.target===this) closeMusescoreModal()">
   <div class="modal-content">
     <span class="close-btn" onclick="closeMusescoreModal()">&times;</span>
     <iframe id="musescoreFrame" width="100%" height="600" frameborder="0" allowfullscreen></iframe>

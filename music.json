@@ -1,27 +1,5 @@
 [
   {
-    "id": "1758417543707",
-    "title": "for-elise",
-    "composer": "Beethoven",
-    "genre": "Inne",
-    "description": "elektro remix",
-    "sheetFile": "fur-elise.pdf",
-    "audioFile": "for-elise.mp3",
-    "musescoreUrl": "https://musescore.com/user/64028842/scores/16559491/embed",
-    "createdAt": "2025-09-21"
-  },
-  {
-    "id": "1758636119646",
-    "title": "Carmina Burana (O Fortuna Imperatrix Mundi)",
-    "composer": "Carl Orff",
-    "genre": "Klasyczna",
-    "description": null,
-    "sheetFile": "Carmina Burana (O Fortuna Imperatrix Mundi).pdf",
-    "audioFile": "Carmina Burana (O Fortuna Imperatrix Mundi).mp3",
-    "musescoreUrl": "https://musescore.com/user/64028842/scores/16559491",
-    "createdAt": "2025-09-23"
-  },
-  {
     "id": "1758804211448",
     "title": "Miserere",
     "composer": "Gregorio Allegri",
@@ -33,3 +11,4 @@
     "createdAt": "2025-09-25"
   }
 ]
+

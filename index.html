@@ -42,6 +42,10 @@
         .error-indicator { text-align: center; padding: 60px; color: #e74c3c; }
         .error-indicator h3 { margin-bottom: 10px; }
         .error-indicator small { color: #7f8c8d; }
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .modal.hidden { display: none; }
+        .modal-content { background: #fff; border-radius: 12px; max-width: 90%; width: 800px; padding: 10px; position: relative; }
+        .close-btn { position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #fff; text-shadow: 0 0 4px #000; }
         @media (max-width: 768px) { .music-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -80,8 +84,16 @@
         </div>
     </div>
 
+    <div id="musescoreModal" class="modal hidden" onclick="if(event.target===this) closeMusescoreModal()">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeMusescoreModal()">&times;</span>
+            <iframe id="musescoreFrame" width="100%" height="600" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </div>
+
     <script>
-        const ACCESS_PASSWORD = 'muzyka2024';
+        // Zaszyfrowany hash hasła (SHA-256) - NIE PRZECHOWUJEMY PRAWDZIWEGO HASŁA!
+        const PASSWORD_HASH = '083ba93b3d5e38d5f739867a2207934a6f17eb7feefc4ba29c864bc66fb12b4f';
 
         const GITHUB_CONFIG = {
             username: 'AnonBOTpl',
@@ -91,9 +103,39 @@
 
         let MUSIC_CATALOG = [];
 
+        // Funkcja hashowania hasła (SHA-256)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkAccess() {
+            const password = document.getElementById('accessPassword').value;
+            const errorEl = document.getElementById('accessError');
+
+            // Hashuj wprowadzone hasło i porównaj z zapisanym hashem
+            const inputHash = await hashPassword(password);
+
+            if (inputHash === PASSWORD_HASH) {
+                const accessToken = btoa(Date.now() + '-' + Math.random());
+                sessionStorage.setItem('musicAccessToken', accessToken);
+                showMainContent();
+                errorEl.classList.add('hidden');
+            } else {
+                errorEl.textContent = 'Nieprawidłowe hasło';
+                errorEl.classList.remove('hidden');
+                setTimeout(() => { 
+                    document.getElementById('accessPassword').value = ''; 
+                    errorEl.classList.add('hidden');
+                }, 2000);
+            }
+        }
+
         async function loadMusicCatalog() {
             try {
-                // Pokaż wskaźnik ładowania
                 document.getElementById('musicGrid').innerHTML = `
                     <div class="loading-indicator">
                         <div style="font-size: 2rem; margin-bottom: 10px;">♪</div>
@@ -103,14 +145,12 @@
 
                 const response = await fetch("music.json?v=" + Date.now());
 
-                // Sprawdź status odpowiedzi
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const data = await response.json();
 
-                // Walidacja struktury JSON
                 if (!Array.isArray(data)) {
                     throw new Error('Nieprawidłowy format pliku music.json - oczekiwana tablica');
                 }
@@ -151,24 +191,6 @@
             }
         }
 
-        function checkAccess() {
-            const password = document.getElementById('accessPassword').value;
-            const errorEl = document.getElementById('accessError');
-
-            if (password === ACCESS_PASSWORD) {
-                sessionStorage.setItem('musicAccess', 'true');
-                showMainContent();
-                errorEl.classList.add('hidden');
-            } else {
-                errorEl.textContent = 'Nieprawidłowe hasło';
-                errorEl.classList.remove('hidden');
-                setTimeout(() => { 
-                    document.getElementById('accessPassword').value = ''; 
-                    errorEl.classList.add('hidden');
-                }, 2000);
-            }
-        }
-
         function showMainContent() {
             document.getElementById('accessGate').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
@@ -191,7 +213,6 @@
             }
 
             MUSIC_CATALOG.forEach(item => {
-                // Walidacja podstawowych pól
                 if (!item.title || !item.composer) {
                     console.warn('Pominięto utwór z brakującymi danymi:', item);
                     return;
@@ -227,36 +248,30 @@
                     </audio>`;
                 }
 
-                // MuseScore embed
                 let musescoreContent = '';
                 if (item.musescoreUrl) {
                     let embedUrl = item.musescoreUrl;
                     if (!embedUrl.includes('/embed')) {
                         embedUrl = embedUrl.replace(/\/$/, '') + '/embed';
                     }
-
-                    
-musescoreContent = `
-  <div style="margin-bottom:15px; text-align:center;">
-    <button onclick="openMusescoreModal('${embedUrl}')" 
-      style="padding:10px 20px; border:none; border-radius:8px; background:#3498db; color:#fff; cursor:pointer;">
-      Otwórz nuty
-    </button>
-  </div>
-`;
-
+                    musescoreContent = `
+                        <div style="margin-bottom:15px; text-align:center;">
+                            <button onclick="openMusescoreModal('${embedUrl}')" 
+                                style="padding:10px 20px; border:none; border-radius:8px; background:#3498db; color:#fff; cursor:pointer;">
+                                Otwórz nuty
+                            </button>
+                        </div>
+                    `;
                 }
 
                 const downloadButton = sheetUrl 
                     ? `<a href="${sheetUrl}" download="${item.title} - ${item.composer}" class="download-btn" title="Pobierz plik">Pobierz nuty</a>`
                     : '';
 
-                // Link do wyszukiwania w YouTube
                 const youtubeSearchQuery = encodeURIComponent(`${item.composer} ${item.title}`);
                 const youtubeButton = `<a href="https://www.youtube.com/results?search_query=${youtubeSearchQuery}" 
                     target="_blank" class="youtube-btn" title="Szukaj w YouTube">YT</a>`;
 
-                // Bezpieczne wyświetlanie danych (escape HTML)
                 const safeTitle = escapeHtml(item.title);
                 const safeComposer = escapeHtml(item.composer);
                 const safeGenre = escapeHtml(item.genre || 'Nieokreślony');
@@ -283,7 +298,6 @@ musescoreContent = `
             });
         }
 
-        // Pomocnicze funkcje
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -300,7 +314,20 @@ musescoreContent = `
             }
         }
 
-        // Wyszukiwanie z debouncing
+        function openMusescoreModal(url) {
+            const modal = document.getElementById('musescoreModal');
+            const frame = document.getElementById('musescoreFrame');
+            frame.src = url;
+            modal.classList.remove('hidden');
+        }
+
+        function closeMusescoreModal() {
+            const modal = document.getElementById('musescoreModal');
+            const frame = document.getElementById('musescoreFrame');
+            frame.src = "";
+            modal.classList.add('hidden');
+        }
+
         let searchTimeout;
         document.getElementById('searchInput').addEventListener('input', function() {
             clearTimeout(searchTimeout);
@@ -326,77 +353,13 @@ musescoreContent = `
             }
         });
 
-        // Automatyczne logowanie jeśli już zalogowany
-        if (sessionStorage.getItem('musicAccess') === 'true') {
+        if (sessionStorage.getItem('musicAccessToken')) {
             showMainContent();
         }
 
-        // Obsługa błędów JavaScript
         window.addEventListener('error', function(e) {
             console.error('Błąd aplikacji:', e.error);
         });
-    
-// Zamknij modal po kliknięciu w tło
-document.getElementById('musescoreModal').addEventListener('click', function(e) {
-  if (e.target === this) {
-    closeMusescoreModal();
-  }
-});
-
-</script>
-
-<!-- Modal do MuseScore -->
-<div id="musescoreModal" class="modal hidden" onclick="if(event.target===this) closeMusescoreModal()">
-  <div class="modal-content">
-    <span class="close-btn" onclick="closeMusescoreModal()">&times;</span>
-    <iframe id="musescoreFrame" width="100%" height="600" frameborder="0" allowfullscreen></iframe>
-  </div>
-</div>
-
-<style>
-.modal {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
-.modal.hidden { display: none; }
-.modal-content {
-  background: #fff;
-  border-radius: 12px;
-  max-width: 90%;
-  width: 800px;
-  padding: 10px;
-  position: relative;
-}
-.close-btn {
-  position: absolute;
-  right: 15px; top: 10px;
-  font-size: 28px;
-  cursor: pointer;
-  color: #fff;
-  text-shadow: 0 0 4px #000;
-}
-</style>
-
-<script>
-function openMusescoreModal(url) {
-  const modal = document.getElementById('musescoreModal');
-  const frame = document.getElementById('musescoreFrame');
-  frame.src = url;
-  modal.classList.remove('hidden');
-}
-
-function closeMusescoreModal() {
-  const modal = document.getElementById('musescoreModal');
-  const frame = document.getElementById('musescoreFrame');
-  frame.src = "";
-  modal.classList.add('hidden');
-}
-</script>
-
+    </script>
 </body>
 </html>

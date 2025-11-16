@@ -64,5 +64,60 @@
     "audioFile": "Bas.mp3",
     "musescoreUrl": "https://musescore.com/user/108456853/scores/28015810/s/pndkm2",
     "createdAt": "2025-09-28"
+  },
+  {
+    "id": "1763316431073",
+    "title": "Jak ptak swobodny - Bass",
+    "composer": "Georg Riedel",
+    "genre": "Klasyczna",
+    "description": "Bass",
+    "sheetFile": "Jak ptak swobodny.pdf",
+    "audioFile": "Jak ptak swobodny -Bass.mp3",
+    "musescoreUrl": "https://musescore.com/user/108456853/scores/29422139/s/_LJjGn",
+    "createdAt": "2025-11-16"
+  },
+  {
+    "id": "1763316528790",
+    "title": "Jak ptak swobodny - Tenor",
+    "composer": "Georg Riedel",
+    "genre": "Klasyczna",
+    "description": "Tenor",
+    "sheetFile": "Jak ptak swobodny.pdf",
+    "audioFile": "Jak ptak swobodny -Tenor.mp3",
+    "musescoreUrl": "https://musescore.com/user/108456853/scores/29422112/s/YNCl-O",
+    "createdAt": "2025-11-16"
+  },
+  {
+    "id": "1763316617822",
+    "title": "Jak ptak swobodny - Alt",
+    "composer": "Georg Riedel",
+    "genre": "Klasyczna",
+    "description": "Alt",
+    "sheetFile": "Jak ptak swobodny.pdf",
+    "audioFile": "Jak ptak swobodny -Alt.mp3",
+    "musescoreUrl": "https://musescore.com/user/108456853/scores/29422082/s/tZ7rO6",
+    "createdAt": "2025-11-16"
+  },
+  {
+    "id": "1763316693336",
+    "title": "jak ptak swobodny - Sopran",
+    "composer": "Georg Riedel",
+    "genre": "Klasyczna",
+    "description": "Sopran",
+    "sheetFile": "Jak ptak swobodny.pdf",
+    "audioFile": "Jak ptak swobodny -Sopran.mp3",
+    "musescoreUrl": "https://musescore.com/user/108456853/scores/29422040/s/bffbtT",
+    "createdAt": "2025-11-16"
+  },
+  {
+    "id": "1763316757239",
+    "title": "Jak ptak swobodny - cały chór",
+    "composer": "Georg Riedel",
+    "genre": "Klasyczna",
+    "description": "Cały chór",
+    "sheetFile": "Jak ptak swobodny.pdf",
+    "audioFile": "Jak ptak swobodny.mp3",
+    "musescoreUrl": "https://musescore.com/user/108456853/scores/29421959/s/gQznKb",
+    "createdAt": "2025-11-16"
   }
 ]

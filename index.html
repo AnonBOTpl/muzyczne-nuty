@@ -225,16 +225,22 @@
                 itemElement.dataset.genre = item.genre || '';
 
                 const baseUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repository}/${GITHUB_CONFIG.branch}/files`;
-                const sheetUrl = item.sheetFile ? `${baseUrl}/sheets/${item.sheetFile}` : null;
-                const audioUrl = item.audioFile ? `${baseUrl}/audio/${item.audioFile}` : null;
+                const encodePath = (path) => path.split('/').map(segment => encodeURIComponent(segment).replace(/'/g, "%27")).join('/');
+                const sheetUrl = item.sheetFile ? `${baseUrl}/sheets/${encodePath(item.sheetFile)}` : null;
+                const audioUrl = item.audioFile ? `${baseUrl}/audio/${encodePath(item.audioFile)}` : null;
+
+                const safeTitle = escapeHtml(item.title);
+                const safeComposer = escapeHtml(item.composer);
+                const safeGenre = escapeHtml(item.genre || 'Nieokreślony');
+                const safeDescription = item.description ? escapeHtml(item.description) : '';
 
                 let sheetContent = '<div class="file-preview">🎼</div>';
                 if (sheetUrl) {
                     const fileExt = item.sheetFile.toLowerCase();
                     if (fileExt.includes('.jpg') || fileExt.includes('.png') || fileExt.includes('.jpeg')) {
-                        sheetContent = `<img src="${sheetUrl}" alt="Nuty - ${item.title}" class="file-image" onclick="window.open('${sheetUrl}', '_blank')" loading="lazy">`;
+                        sheetContent = `<img src="${sheetUrl}" alt="Nuty - ${safeTitle}" class="file-image" data-url="${sheetUrl}" onclick="window.open(this.getAttribute('data-url'), '_blank')" loading="lazy">`;
                     } else {
-                        sheetContent = `<div class="file-preview" onclick="window.open('${sheetUrl}', '_blank')" title="Otwórz plik PDF">📄<br><small>PDF</small></div>`;
+                        sheetContent = `<div class="file-preview" data-url="${sheetUrl}" onclick="window.open(this.getAttribute('data-url'), '_blank')" title="Otwórz plik PDF">📄<br><small>PDF</small></div>`;
                     }
                 }
 
@@ -254,9 +260,10 @@
                     if (!embedUrl.includes('/embed')) {
                         embedUrl = embedUrl.replace(/\/$/, '') + '/embed';
                     }
+                    const safeEmbedUrl = escapeHtml(embedUrl);
                     musescoreContent = `
                         <div style="margin-bottom:15px; text-align:center;">
-                            <button onclick="openMusescoreModal('${embedUrl}')" 
+                            <button data-musescore-url="${safeEmbedUrl}" onclick="openMusescoreModal(this.getAttribute('data-musescore-url'))"
                                 style="padding:10px 20px; border:none; border-radius:8px; background:#3498db; color:#fff; cursor:pointer;">
                                 Otwórz nuty
                             </button>
@@ -265,17 +272,12 @@
                 }
 
                 const downloadButton = sheetUrl 
-                    ? `<a href="${sheetUrl}" download="${item.title} - ${item.composer}" class="download-btn" title="Pobierz plik">Pobierz nuty</a>`
+                    ? `<a href="${sheetUrl}" download="${safeTitle} - ${safeComposer}" class="download-btn" title="Pobierz plik">Pobierz nuty</a>`
                     : '';
 
                 const youtubeSearchQuery = encodeURIComponent(`${item.composer} ${item.title}`);
                 const youtubeButton = `<a href="https://www.youtube.com/results?search_query=${youtubeSearchQuery}" 
                     target="_blank" class="youtube-btn" title="Szukaj w YouTube">YT</a>`;
-
-                const safeTitle = escapeHtml(item.title);
-                const safeComposer = escapeHtml(item.composer);
-                const safeGenre = escapeHtml(item.genre || 'Nieokreślony');
-                const safeDescription = item.description ? escapeHtml(item.description) : '';
 
                 itemElement.innerHTML = `
                     <div class="music-title">${safeTitle}</div>
@@ -327,6 +329,12 @@
             frame.src = "";
             modal.classList.add('hidden');
         }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeMusescoreModal();
+            }
+        });
 
         let searchTimeout;
         document.getElementById('searchInput').addEventListener('input', function() {
